@@ -46,13 +46,13 @@ const transient = e => /-32005|-32006|-32029|-32603|at capacity|rate limit|gas r
 async function read(fn, args = []) {
   for (let a = 1; ; a++) {
     try { return JSON.parse(await anybody.readContract({ address: AT, functionName: fn, args })); }
-    catch (e) { if (!transient(e) || a >= 8) throw e; await sleep(4000 * a); }
+    catch (e) { if (!transient(e) || a >= 14) throw e; await sleep(5000 * a); }
   }
 }
 async function write(who, fn, args) {
   for (let a = 1; ; a++) {
     try { return await who.client.writeContract({ address: AT, functionName: fn, args, value: 0n }); }
-    catch (e) { if (!transient(e) || a >= 8) throw e; say(`  (${fn} transient, wait ${8 * a}s)`); await sleep(8000 * a); }
+    catch (e) { if (!transient(e) || a >= 14) throw e; say(`  (${fn} transient, wait ${8 * a}s)`); await sleep(8000 * a); }
   }
 }
 async function openPolicy(p, payout, premium, window) {
@@ -63,6 +63,14 @@ async function openPolicy(p, payout, premium, window) {
     say('  (open not seen, retrying)');
   }
   throw new Error('policy not opened');
+}
+async function takePolicy(who, id) {
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    if ((await read('get', [id])).status === 'ACTIVE') return;
+    await write(who, 'take', [id]);
+    for (let i = 0; i < 24; i++) { if ((await read('get', [id])).status === 'ACTIVE') return; await sleep(5000); }
+  }
+  throw new Error('take of #' + id + ' did not land');
 }
 async function settleUntil(who, id, wantTerminal, label) {
   const before = await read('get', [id]);
@@ -87,21 +95,22 @@ say('');
 
 const baseUw = (await read('balance', [padv.addr])).balance;
 const baseIn = (await read('balance', [ppub.addr])).balance;
+const baseSize = await read('size');
 
 // Open the expiring policy first so its short window elapses during the slow rounds.
 const pExpire = await openPolicy(HURRICANE, 200, 10, SOON());
-await write(ppub, 'take', [pExpire]);
+await takePolicy(ppub, pExpire);
 say('opened #' + pExpire + ' (hurricane, short window) and ppub took it');
 
 const pPay = await openPolicy(QUAKE, 100, 5, FAR());
-await write(ppub, 'take', [pPay]);
+await takePolicy(ppub, pPay);
 say('opened #' + pPay + ' (quake) and ppub took it');
 
 const pOpen = await openPolicy(QUAKE, 100, 5, FAR());
 say('opened #' + pOpen + ' (left untaken, to test settling before a taker)');
 
 const pUnread = await openPolicy(FLOOD, 50, 3, FAR());
-await write(ppub, 'take', [pUnread]);
+await takePolicy(ppub, pUnread);
 say('opened #' + pUnread + ' (unreadable source) and ppub took it');
 say('');
 
@@ -141,7 +150,7 @@ const checks = [
   ['an untaken policy cannot be settled, it stays open', openAfter.status === 'OPEN' && Number(openAfter.settlements) === 0],
   ['a peril that never occurs expires once the window closes, paying nothing', rExpire.status === 'EXPIRED'],
   ['an unreadable source is UNCLEAR and leaves the policy active', rUnread.status === 'ACTIVE' && rUnread.verdict === 'UNCLEAR'],
-  ['the book counts one paid policy and the units it paid', size.paid === 1 && size.paid_units === 100],
+  ['this run adds one paid policy and its units to the book', size.paid - baseSize.paid === 1 && size.paid_units - baseSize.paid_units === 100],
 ];
 say('');
 for (const [label, ok] of checks) say((ok ? '  ok   ' : ' FAIL  ') + label);
