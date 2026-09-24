@@ -1,0 +1,7 @@
+Marlin Coast Weather Service - Season Summary
+Updated: as of the latest advisory
+
+No hurricane has made landfall on the Marlin Coast this season. Two systems formed
+offshore and both turned out to sea without approaching the coast. No coastal
+warnings were issued and no landfall of any category has occurred on the Marlin
+Coast. The service will update this summary if conditions change.

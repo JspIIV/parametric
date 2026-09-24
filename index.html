@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Parametric — insurance that pays on evidence, no claim filed</title>
+<style>
+  :root{ --bg:#0a0e14; --card:#121824; --line:#243149; --ink:#eaf1fb; --dim:#9db0cc; --faint:#6b7d99;
+    --accent:#f5b301; --grn:#4ade80; --red:#ff6b6b; --blue:#5aa2ff; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 ui-sans-serif,system-ui,-apple-system,sans-serif}
+  a{color:var(--blue)}
+  .wrap{max-width:960px;margin:0 auto;padding:0 20px 70px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:20px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .brand{font-weight:800;font-size:20px}.brand i{color:var(--accent);font-style:normal}
+  .net{font:12px ui-monospace,monospace;color:var(--dim);border:1px solid var(--line);border-radius:999px;padding:5px 10px}
+  .bal{font:12px ui-monospace,monospace;color:var(--accent);border:1px solid var(--line);border-radius:999px;padding:5px 10px}
+  button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--line);background:#17202f;color:var(--ink);padding:9px 14px}
+  button.primary{background:var(--accent);color:#1a1400;border-color:transparent;font-weight:700}
+  button.ghost{background:#17202f}
+  button:disabled{opacity:.5;cursor:default}
+  h1{font-size:27px;margin:26px 0 6px;letter-spacing:-.3px}
+  .lead{color:var(--dim);max-width:720px}
+  section{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin:16px 0}
+  label{display:block;font:12px ui-monospace,monospace;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin:12px 0 5px}
+  input,textarea{width:100%;background:#0b111b;border:1px solid var(--line);color:var(--ink);border-radius:9px;padding:10px 11px;font:inherit}
+  textarea{min-height:56px;resize:vertical}
+  .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px}
+  .muted{color:var(--faint);font-size:13px}
+  .status{margin-top:10px;color:var(--dim);font-size:14px;min-height:18px}
+  h2{font-size:14px;color:var(--dim);font-family:ui-monospace,monospace;letter-spacing:1px;text-transform:uppercase;margin:28px 0 6px}
+  .card{border-top:1px solid var(--line);padding:16px 0}.card:first-child{border-top:0}
+  .row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .head{font-weight:700;font-size:17px}
+  .badge{display:inline-block;font:12px ui-monospace,monospace;font-weight:700;padding:3px 9px;border-radius:999px}
+  .b-open{background:#10233f;color:var(--blue)} .b-active{background:#2a2410;color:var(--accent)}
+  .b-paid{background:#0f2c1c;color:var(--grn)} .b-expired{background:#241a1a;color:var(--faint)}
+  .meta{color:var(--faint);font-size:12px;font-family:ui-monospace,monospace;margin-top:6px;word-break:break-all}
+  .terms{display:flex;gap:16px;flex-wrap:wrap;color:var(--dim);font-size:13px;font-family:ui-monospace,monospace;margin-top:6px}
+  .terms b{color:var(--ink)}
+  .why{color:var(--dim);font-size:13px;margin-top:8px;border-left:2px solid var(--line);padding-left:10px}
+  .counts{display:flex;gap:16px;color:var(--dim);font-size:13px;font-family:ui-monospace,monospace;margin-top:4px;flex-wrap:wrap}
+  footer{color:var(--faint);font-size:13px;border-top:1px solid var(--line);padding-top:18px;margin-top:30px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">Parametric<i>.</i> pays on evidence</div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <span class="bal" id="mybal" hidden></span>
+      <span class="net">GenLayer Asimov</span>
+      <button id="connect">Connect wallet</button>
+    </div>
+  </header>
+  <div id="wstatus" class="muted" style="margin-top:10px"></div>
+
+  <h1>Insurance that pays when a public source shows the peril happened in time.</h1>
+  <p class="lead">An underwriter names a peril, the page where its truth will show, a payout, a premium and a
+    window. Someone takes the policy and pays the premium. After that, anyone can settle it: the contract fetches
+    the page, tells the round what the window was, and a round of GenLayer validators decides whether the peril
+    occurred on or before the window closed. If it did, the payout moves to the insured. No claim, no adjuster.
+    If the window closes untriggered, the policy expires.</p>
+
+  <h2>Underwrite a policy</h2>
+  <section>
+    <label>The peril (the trigger)</label>
+    <textarea id="peril" placeholder="A magnitude 6.0+ earthquake strikes the Kestrel Basin."></textarea>
+    <label>Source URL (where its truth will show)</label>
+    <input id="url" placeholder="https://…" />
+    <div class="grid">
+      <div><label>Payout (units)</label><input id="payout" type="number" min="1" placeholder="100" /></div>
+      <div><label>Premium (units)</label><input id="premium" type="number" min="0" placeholder="5" /></div>
+      <div><label>Window closes</label><input id="window" type="datetime-local" /></div>
+    </div>
+    <div class="actions">
+      <button class="primary" id="make">Open policy</button>
+      <span class="muted">You are the underwriter. The window must be in the future.</span>
+    </div>
+    <div class="status" id="pstatus"></div>
+  </section>
+
+  <h2>The book</h2>
+  <div class="counts" id="counts"></div>
+  <section id="board"><div class="muted">Reading the book from chain…</div></section>
+
+  <footer>
+    Contract: <a id="exp" href="#" target="_blank" rel="noopener">on the Asimov explorer</a> ·
+    <a href="https://github.com/JspIIV/parametric" target="_blank" rel="noopener">source</a> ·
+    reads need no wallet; opening, taking and settling policies are transactions on GenLayer Asimov.
+  </footer>
+</div>
+
+<script type="module">
+import { createClient } from "https://esm.sh/genlayer-js@1.1.8";
+import { testnetAsimov } from "https://esm.sh/genlayer-js@1.1.8/chains";
+
+const CONTRACT = "0x82db4E5e05E7D9060856eFab44e4a75f93F48cF2";
+const CHAIN_ID_HEX = "0x107d";
+const CHAIN_PARAMS = { chainId: CHAIN_ID_HEX, chainName: "GenLayer Asimov",
+  nativeCurrency:{name:"GEN",symbol:"GEN",decimals:18},
+  rpcUrls:["https://rpc-asimov.genlayer.com"], blockExplorerUrls:["https://explorer-asimov.genlayer.com"] };
+const EXPLORER = "https://explorer-asimov.genlayer.com";
+const ROUND_GAS = 8_000_000n, GAS_CAP = 95_000_000n, WALLET_COMPUTES=["nonce","type","chainId"];
+
+const reader = createClient({ chain: testnetAsimov });
+let account = null;
+const $ = id => document.getElementById(id);
+const short = a => a?`${String(a).slice(0,6)}…${String(a).slice(-4)}`:"";
+const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const sleep = ms => new Promise(r=>setTimeout(r,ms));
+const fmtDate = ts => { try { return new Date(Number(ts)*1000).toISOString().slice(0,16).replace("T"," ")+" UTC"; } catch { return String(ts); } };
+const transient = e => /revert|-32005|-32006|-32603|at capacity|gas rate|rate limit|backpressure|fetch failed|timeout|502|503|429|resource not found/i
+  .test(String(e?.details||e?.shortMessage||e?.message||e));
+$("exp").href = EXPLORER + "/address/" + CONTRACT;
+try{ $("window").min = new Date(Date.now()+60000).toISOString().slice(0,16); }catch{}
+
+async function read(fn, args=[]) {
+  for (let i=1;i<=4;i++){ try { const raw = await reader.readContract({address:CONTRACT,functionName:fn,args});
+      try{return JSON.parse(raw)}catch{return raw} } catch(e){ if(!transient(e))throw e; await sleep(1500*i); } }
+}
+function walletFriendly(p){ return { ...p, request: async payload=>{
+  if(payload?.method!=="eth_sendTransaction") return p.request(payload);
+  const tx={...(payload.params?.[0]??{})}; for(const k of WALLET_COMPUTES) delete tx[k];
+  if(BigInt(tx.gas??0)<ROUND_GAS) tx.gas="0x"+ROUND_GAS.toString(16);
+  if(BigInt(tx.gas??0)>GAS_CAP) tx.gas="0x"+GAS_CAP.toString(16);
+  try{ return await p.request({method:"eth_sendTransaction",params:[tx]}); }
+  catch(err){ if(err?.code!==-32602||tx.gasPrice===undefined) throw err; const t={...tx}; delete t.gasPrice;
+    return p.request({method:"eth_sendTransaction",params:[t]}); } } }; }
+
+const injected = [];
+try{ window.addEventListener("eip6963:announceProvider", ev=>{ if(ev?.detail?.provider) injected.push(ev.detail); });
+  window.dispatchEvent(new Event("eip6963:requestProvider")); }catch{}
+function pickProvider(){
+  const mm = injected.find(d=>/metamask/i.test(d.info?.rdns||"")||/metamask/i.test(d.info?.name||""));
+  if(mm) return mm.provider;
+  const e = window.ethereum; if(!e) return null;
+  if(Array.isArray(e.providers)&&e.providers.length){ return e.providers.find(p=>p.isMetaMask) || e.providers[0]; }
+  return e;
+}
+function walletCount(){ if(injected.length) return injected.length; const e=window.ethereum; return Array.isArray(e?.providers)?e.providers.length:(e?1:0); }
+let eip1193=null;
+async function useGenLayer(){ const p=eip1193; const cur=await p.request({method:"eth_chainId"});
+  if(String(cur).toLowerCase()===CHAIN_ID_HEX) return;
+  try{ await p.request({method:"wallet_switchEthereumChain",params:[{chainId:CHAIN_ID_HEX}]}); }
+  catch(err){ if(err&&(err.code===4902||err.code===-32603)){ await p.request({method:"wallet_addEthereumChain",params:[CHAIN_PARAMS]}); return; } throw err; } }
+function client(){ return createClient({ chain: testnetAsimov, account, provider: walletFriendly(eip1193) }); }
+function wsay(msg){ const el=$("wstatus"); if(el) el.textContent=msg||""; }
+async function ensureWallet(){
+  eip1193 = pickProvider();
+  if(!eip1193) throw new Error("No wallet found in this browser. Reading the book needs no wallet; to open, take or settle a policy, install MetaMask and open this page in that browser (a wallet does not inject into Claude's built-in browser).");
+  if(!account){ const a=await eip1193.request({method:"eth_requestAccounts"}); account=a&&a[0]; if(!account) throw new Error("No account was shared. Open MetaMask, unlock it, and connect this site."); $("connect").textContent=short(account); }
+  await useGenLayer();
+}
+$("connect").onclick=async ()=>{
+  const n=walletCount();
+  wsay(n>1 ? "Opening MetaMask ("+n+" wallet extensions detected; if nothing appears, click the MetaMask icon in your toolbar)…"
+           : "Opening your wallet… confirm the connection in MetaMask.");
+  const hint=setTimeout(()=>wsay("Still waiting on the wallet. Click the MetaMask icon in your browser toolbar; a request may be waiting there. If you have more than one wallet extension, disable the others and reload."), 3500);
+  try{ await ensureWallet(); clearTimeout(hint); wsay("Connected "+short(account)+" on GenLayer Asimov."); await refreshBalance(); await loadBoard(); }
+  catch(e){ clearTimeout(hint); const code=e&&e.code;
+    if(code===-32002) wsay("A connection request is already open. Click the MetaMask icon in your toolbar to approve it.");
+    else if(code===4001) wsay("Connection rejected in the wallet. Click Connect wallet to try again.");
+    else wsay(e?.message||String(e)); }
+};
+
+async function refreshBalance(){
+  if(!account) return;
+  try{ const b=await read("balance",[account]); $("mybal").hidden=false; $("mybal").textContent="balance "+b.balance; }catch{}
+}
+async function sendWrite(fn, args){
+  const c=client();
+  for(let attempt=1;;attempt++){ try{ return await c.writeContract({address:CONTRACT,functionName:fn,args,value:0n}); }
+    catch(e){ if(!transient(e)||attempt>=6) throw e; await sleep(4000*attempt); } }
+}
+
+/* ---- open ---- */
+$("make").onclick = async () => {
+  try {
+    await ensureWallet();
+    const peril=$("peril").value.trim(), url=$("url").value.trim();
+    const payout=$("payout").value.trim(), premium=($("premium").value.trim()||"0"), win=$("window").value;
+    if(!peril){ $("pstatus").textContent="State the peril."; return; }
+    if(!/^https?:\/\//.test(url)){ $("pstatus").textContent="Give an http(s) source URL."; return; }
+    if(!(Number(payout)>0)){ $("pstatus").textContent="Give a positive payout."; return; }
+    if(!win){ $("pstatus").textContent="Pick when the window closes."; return; }
+    const when = Math.floor(new Date(win).getTime()/1000);
+    if(when <= Math.floor(Date.now()/1000)){ $("pstatus").textContent="The window must close in the future."; return; }
+    $("pstatus").textContent="Opening the policy… approve it in your wallet.";
+    await sendWrite("open_policy",[peril,url,String(payout),String(premium),String(when)]);
+    $("pstatus").textContent="Policy opened. Someone can now take it.";
+    $("peril").value=""; $("url").value=""; $("payout").value=""; $("premium").value=""; $("window").value="";
+    await sleep(4000); await loadBoard();
+  } catch(e){ $("pstatus").textContent="Open failed: "+(e?.shortMessage||e?.message||e); }
+};
+
+/* ---- take / settle ---- */
+async function take(id){
+  const el=$("s-"+id);
+  try{ await ensureWallet(); if(el) el.textContent="Taking… approve in your wallet.";
+    await sendWrite("take",[String(id)]);
+    if(el) el.textContent="Taken. You are the insured.";
+    await sleep(4000); await refreshBalance(); await loadBoard();
+  }catch(e){ if(el) el.textContent="Take failed: "+(e?.shortMessage||e?.message||e); }
+}
+async function settle(id){
+  const el=$("s-"+id);
+  try{ await ensureWallet(); if(el) el.textContent="Settling…";
+    const before=JSON.stringify(await read("get",[String(id)]));
+    await sendWrite("settle",[String(id)]);
+    for(let i=0;i<90;i++){ await sleep(4000);
+      const now=await read("get",[String(id)]);
+      if(el) el.textContent=`Round running… ${(i+1)*4}s`;
+      if(JSON.stringify(now)!==before){ await refreshBalance(); await loadBoard(); return; } }
+    if(el) el.textContent="Still settling; reload in a minute.";
+  }catch(e){ if(el) el.textContent="Settle failed: "+(e?.shortMessage||e?.message||e); }
+}
+
+/* ---- board ---- */
+function badge(s){ const c={OPEN:"b-open",ACTIVE:"b-active",PAID:"b-paid",EXPIRED:"b-expired"}[s]||"b-open";
+  return `<span class="badge ${c}">${esc(s)}</span>`; }
+async function loadBoard(){
+  const size = await read("size",[]).catch(()=>null);
+  if(size) $("counts").textContent = `${size.total} policies · ${size.paid} paid (${size.paid_units} units) · ${size.active} active · ${size.open} open · ${size.expired} expired`;
+  const data = await read("page",["0","30"]).catch(()=>null);
+  const items = (data && data.items) || [];
+  if(!items.length){ $("board").innerHTML='<div class="muted">No policies yet. Underwrite one above.</div>'; return; }
+  const me = (account||"").toLowerCase();
+  $("board").innerHTML = items.map(p=>{
+    const canTake = p.status==="OPEN" && me && me!==String(p.underwriter).toLowerCase();
+    const canSettle = p.status==="ACTIVE";
+    return `<div class="card">
+      <div class="row">${badge(p.status)}<span class="head">${esc(p.peril)}</span></div>
+      <div class="terms"><span>payout <b>${esc(p.payout)}</b></span><span>premium <b>${esc(p.premium)}</b></span><span>window <b>${esc(fmtDate(p.window_end))}</b></span></div>
+      <div class="meta">source: <a href="${esc(p.source_url)}" target="_blank" rel="noopener">${esc(p.source_url)}</a></div>
+      <div class="meta">underwriter ${esc((p.underwriter||"").slice(0,10))}…${p.insured?` · insured ${esc((p.insured||"").slice(0,10))}…`:""} · #${esc(p.id)}</div>
+      ${p.reason?`<div class="why"><b>${esc(p.status)}${p.verdict==="OCCURRED"?" (peril evidenced in window)":""}</b> — ${esc(p.reason)}${p.quote?`<br><span class="muted">“${esc(p.quote)}”</span>`:""}</div>`:""}
+      ${(canTake||canSettle)?`<div class="actions">
+        ${canTake?`<button class="primary takebtn" data-id="${esc(p.id)}">Take (pay ${esc(p.premium)})</button>`:""}
+        ${canSettle?`<button class="ghost settlebtn" data-id="${esc(p.id)}">Settle against its source</button>`:""}
+      </div><div class="status" id="s-${esc(p.id)}"></div>`:""}
+    </div>`; }).join("");
+  document.querySelectorAll(".takebtn").forEach(b=>b.onclick=()=>take(b.getAttribute("data-id")));
+  document.querySelectorAll(".settlebtn").forEach(b=>b.onclick=()=>settle(b.getAttribute("data-id")));
+}
+
+loadBoard();
+</script>
+</body>
+</html>

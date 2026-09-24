@@ -1,0 +1,5 @@
+Ordinary insurance pays after a claim and an argument about whether it happened. Parametric insurance names the trigger up front and pays on evidence, no claim.
+
+open_policy(peril, source_url, payout, premium, window_end): an underwriter names a peril, the page it shows on, a payout, a premium, and a future window, bound to the caller. take(policy_id): someone takes it as the insured, paying the premium to the underwriter. settle(policy_id), open to anybody once taken, fetches the page and passes the round the window. The round returns OCCURRED, NOT_OCCURRED or UNCLEAR: only an occurrence on or before the window close pays, moving it to the insured. Once the window closes untriggered the policy expires; an unreadable page is UNCLEAR, it stays active.
+
+The window is part of the settlement: refused if not future, injected into the round, only an in-window occurrence pays. balance(address) is payouts received and premiums earned. Proven on Asimov; tests in tests/parametric_rules.py.

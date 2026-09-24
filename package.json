@@ -1,0 +1,9 @@
+{
+  "name": "parametric",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Parametric insurance that pays when a public source shows the peril happened in time, on GenLayer.",
+  "scripts": { "deploy": "node scripts/deploy.mjs", "prove": "node scripts/prove.mjs" },
+  "dependencies": { "ethers": "^6", "genlayer-js": "1.1.8" }
+}
