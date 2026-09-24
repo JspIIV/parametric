@@ -32,12 +32,12 @@ Whether a peril happened, and happened in time, is a judgement over real-world t
 
 ## Tests
 
-`python tests/parametric_rules.py` — the payout rules exercised through the real `open_policy()`, `take()` and `settle()` on a Parametric built against a stub of the runtime, with time and the round verdict controlled. It proves back-dated windows are refused, an untaken policy cannot be settled, the premium is credited on take, only an in-window occurrence pays the insured, a peril that never occurs expires after the window, and an unreadable source stays active. 26 checks.
+`python tests/parametric_rules.py` — the payout rules exercised through the real `open_policy()`, `take()` and `settle()` on a Parametric built against a stub of the runtime, with time and the round verdict controlled. It proves back-dated windows are refused, an untaken policy cannot be settled, the premium is credited on take, only an in-window occurrence pays the insured, a peril that never occurs expires after the window, an unreadable source stays active, and a not-found body never pays. 27 checks.
 
 ## Live
 
-- **Contract (GenLayer Asimov):** `0x82db4E5e05E7D9060856eFab44e4a75f93F48cF2`
-- Explorer: https://explorer-asimov.genlayer.com/address/0x82db4E5e05E7D9060856eFab44e4a75f93F48cF2
+- **Contract (GenLayer Asimov):** `0xd6251064880a55FadEFd1847dfCED7B4cCdc97fF`
+- Explorer: https://explorer-asimov.genlayer.com/address/0xd6251064880a55FadEFd1847dfCED7B4cCdc97fF
 - **App:** https://jspiiv.github.io/parametric/ — reads the book from chain without a wallet; opening, taking and settling are transactions on Asimov.
 
 ## Proven on Asimov

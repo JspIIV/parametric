@@ -186,9 +186,11 @@ Decide one of:
   {UNCLEAR} the page could not be read, or does not settle whether or when the peril happened
 
 Judge from the date the page gives for the event, against the window close above,
-not against today. Do not treat an unreachable or unrelated page as an occurrence:
-that is {UNCLEAR}. An event the page dates after the window close is {NOT_OCCURRED}
-for this policy, not {OCCURRED}.
+not against today. A page that is an error page, a "404" or "not found" notice, an
+empty page, or a page that is simply unrelated to this peril is NOT evidence the peril
+happened: that is {UNCLEAR}, never {OCCURRED}. An event the page dates after the window
+close is {NOT_OCCURRED} for this policy, not {OCCURRED}. Only answer {OCCURRED} when the
+page itself plainly states this peril happened, on or before the window close.
 
 Reply with bare JSON and nothing else:
 {{"verdict": "{OCCURRED}" or "{NOT_OCCURRED}" or "{UNCLEAR}",
@@ -319,6 +321,9 @@ class Parametric(gl.Contract):
                 if isinstance(page, (bytes, bytearray)):
                     page = page.decode("utf-8", "replace")
                 page = _clip(str(page), MAX_PAGE)
+                # A bare not-found body is not a readable page, whatever status the host returned.
+                if page.strip().lower().startswith(("404: not found", "404 not found", "not found")):
+                    page = FETCH_FAILED
             except Exception:
                 page = FETCH_FAILED
             if not page or page == FETCH_FAILED:

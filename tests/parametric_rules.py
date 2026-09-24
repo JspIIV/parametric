@@ -208,9 +208,21 @@ def main():
     unclear = json.loads(c.settle(p3))
     check_("an unreadable page is UNCLEAR and the policy stays active", unclear["verdict"] == "UNCLEAR" and unclear["status"] == "ACTIVE")
 
+    print("\na not-found body is not evidence and does not pay")
+    clock["now"] = NOW
+    as_(UW)
+    p4 = json.loads(c.open_policy("A wildfire reaches the ridge line", URL, "70", "2", str(FUTURE)))["id"]
+    as_(INSURED)
+    c.take(p4)
+    clock["now"] = NOW + 40
+    gl.nondet.web.page = "404: Not Found"
+    notfound = json.loads(c.settle(p4))
+    check_("a 404 body is treated as unreadable, UNCLEAR, and pays nothing",
+           notfound["verdict"] == "UNCLEAR" and notfound["status"] == "ACTIVE")
+
     print("\nthe book counts what it paid")
     size = json.loads(c.size())
-    check_("one policy paid, one expired, one active", size["paid"] == 1 and size["expired"] == 1 and size["active"] == 1)
+    check_("one policy paid, one expired, two active", size["paid"] == 1 and size["expired"] == 1 and size["active"] == 2)
     check_("total paid units equals the one payout made", size["paid_units"] == 100)
 
     failed = [label for label, ok in RESULTS if not ok]
